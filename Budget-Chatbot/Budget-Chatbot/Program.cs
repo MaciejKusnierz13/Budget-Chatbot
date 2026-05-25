@@ -1,3 +1,6 @@
+using AI.Integration.Configuration;
+using AI.Integration.Services;
+
 namespace Budget_Chatbot
 {
     public class Program
@@ -8,6 +11,10 @@ namespace Budget_Chatbot
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            builder.Services.Configure<LmStudioOptions>(builder.Configuration.GetSection("LMStudio"));
+
+            // 2. Rejestrujemy LlmService jako Singleton (klient wewn¹trz jest przystosowany do dzia³ania w tle dla ca³ej aplikacji)
+            builder.Services.AddSingleton<LlmService>();
 
             var app = builder.Build();
 
@@ -29,6 +36,12 @@ namespace Budget_Chatbot
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
+
+            app.MapGet("/api/test-ai", async (AI.Integration.Services.LlmService llmService) =>
+            {
+                var response = await llmService.TestConnectionAsync("Czeœæ! Jesteœ moim nowym asystentem finansowym. Powiedz mi jedno zdanie na powitanie.");
+                return Results.Ok(response);
+            });
 
             app.Run();
         }
