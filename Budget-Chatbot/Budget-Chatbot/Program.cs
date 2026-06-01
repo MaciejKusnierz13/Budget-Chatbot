@@ -1,5 +1,7 @@
 using AI.Integration.Configuration;
 using AI.Integration.Services;
+using BudgetChatbot.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Budget_Chatbot
 {
@@ -9,6 +11,10 @@ namespace Budget_Chatbot
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Rejestracja SQL Server
+
+            builder.Services.AddDbContext<AppDbContext>(options =>
+            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
             // Add services to the container.
             builder.Services.AddControllersWithViews();
             builder.Services.Configure<LmStudioOptions>(builder.Configuration.GetSection("LMStudio"));
