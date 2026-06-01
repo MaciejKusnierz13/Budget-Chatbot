@@ -43,12 +43,15 @@ public class LlmService
             new UserChatMessage(userMessage)
         };
 
-        var options = new ChatCompletionOptions
-        {
-            ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
-        };
+        // ZAKOMENTOWANE: LM Studio odrzuca ten parametr błędem 400
+        // var options = new ChatCompletionOptions
+        // {
+        //     ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
+        // };
 
-        ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, options);
+        
+        ChatCompletion completion = await _chatClient.CompleteChatAsync(messages);
+
         return completion.Content[0].Text;
     }
 }
