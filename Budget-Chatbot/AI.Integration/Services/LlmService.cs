@@ -34,4 +34,24 @@ public class LlmService
         ChatCompletion completion = await _chatClient.CompleteChatAsync(message);
         return completion.Content[0].Text;
     }
+
+    public async Task<string> AskInJsonModeAsync(string systemPrompt, string userMessage)
+    {
+        var messages = new List<ChatMessage>
+        {
+            new SystemChatMessage(systemPrompt),
+            new UserChatMessage(userMessage)
+        };
+
+        // ZAKOMENTOWANE: LM Studio odrzuca ten parametr błędem 400
+        // var options = new ChatCompletionOptions
+        // {
+        //     ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
+        // };
+
+        
+        ChatCompletion completion = await _chatClient.CompleteChatAsync(messages);
+
+        return completion.Content[0].Text;
+    }
 }
