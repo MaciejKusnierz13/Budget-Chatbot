@@ -22,6 +22,7 @@ namespace Budget_Chatbot
             // 2. Rejestrujemy LlmService jako Singleton (klient wewn¹trz jest przystosowany do dzia³ania w tle dla ca³ej aplikacji)
             builder.Services.AddSingleton<LlmService>();
 
+            builder.Services.AddScoped<BudgetChatbot.Services.TransactionBotService>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

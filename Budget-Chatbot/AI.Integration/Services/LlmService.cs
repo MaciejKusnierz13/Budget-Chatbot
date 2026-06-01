@@ -34,4 +34,21 @@ public class LlmService
         ChatCompletion completion = await _chatClient.CompleteChatAsync(message);
         return completion.Content[0].Text;
     }
+
+    public async Task<string> AskInJsonModeAsync(string systemPrompt, string userMessage)
+    {
+        var messages = new List<ChatMessage>
+        {
+            new SystemChatMessage(systemPrompt),
+            new UserChatMessage(userMessage)
+        };
+
+        var options = new ChatCompletionOptions
+        {
+            ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
+        };
+
+        ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, options);
+        return completion.Content[0].Text;
+    }
 }
