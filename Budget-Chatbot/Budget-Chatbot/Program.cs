@@ -1,5 +1,6 @@
 using AI.Integration.Configuration;
 using AI.Integration.Services;
+using Budget_Chatbot.Services;
 using BudgetChatbot.Core.Entities;
 using BudgetChatbot.Infrastructure.Data;
 using BudgetChatbot.Services;
@@ -36,6 +37,11 @@ namespace Budget_Chatbot
                 options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             });
 
+            // Rejestracja ReportsService
+            builder.Services.AddScoped<Budget_Chatbot.Services.ReportsService>();
+            builder.Services.AddScoped<BudgetChatbot.Services.TransactionBotService>();
+
+
             var app = builder.Build();
 
             if (app.Environment.IsDevelopment())
@@ -71,26 +77,131 @@ namespace Budget_Chatbot
 
             // SEGMENCIK TESTOWY, JAK NAJBARDZIEJ MO¯NA USUN¥Æ
 
-            // --- 1. SEEDOWANIE BAZY DANYCH ---
+            // --- SEEDOWANIE BAZY DANYCH ---
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-                // Dodanie testowego u¿ytkownika
-                if (!db.Users.Any())
+                db.Database.Migrate(); // upewnia siê, ¿e baza istnieje
+
+                // =========================
+                // USER
+                // =========================
+                var user = db.Users.FirstOrDefault();
+
+                if (user == null)
                 {
-                    db.Users.Add(new User { Username = "TestowyStudent", Email = "student@agh.edu.pl" });
+                    user = new User
+                    {
+                        Username = "TestUser",
+                        Email = "test@test.com"
+                    };
+
+                    db.Users.Add(user);
                     db.SaveChanges();
                 }
 
-                // Podstawowe kategorie, *testowo* DANIEL ADAM mo¿ecie zmieniaæ
+                // =========================
+                // CATEGORIES
+                // =========================
                 if (!db.Categories.Any())
                 {
-                    db.Categories.AddRange(
+                    var categories = new List<Category>
+                    {
                         new Category { Name = "Jedzenie", IsExpense = true },
                         new Category { Name = "Transport", IsExpense = true },
+                        new Category { Name = "Rozrywka", IsExpense = true },
                         new Category { Name = "Wyp³ata", IsExpense = false }
-                    );
+                    };
+
+                    db.Categories.AddRange(categories);
+                    db.SaveChanges();
+                }
+
+                // =========================
+                // TRANSAKCJE TESTOWE
+                // =========================
+                if (!db.Transactions.Any())
+                {
+                    var rnd = new Random();
+
+                    var categories = db.Categories.ToList();
+
+                    var foodCategory = categories.First(c => c.Name == "Jedzenie");
+                    var transportCategory = categories.First(c => c.Name == "Transport");
+                    var entertainmentCategory = categories.First(c => c.Name == "Rozrywka");
+                    var salaryCategory = categories.First(c => c.Name == "Wyp³ata");
+
+                    var transactions = new List<Transaction>();
+
+                    var startDate = DateTime.UtcNow.AddMonths(-4);
+
+                    // tydzieñ bez transakcji
+                    var emptyWeekStart = startDate.AddDays(45);
+                    var emptyWeekEnd = emptyWeekStart.AddDays(7);
+
+                    // miesiêczne wyp³aty
+                    for (int i = 0; i < 4; i++)
+                    {
+                        transactions.Add(new Transaction
+                        {
+                            UserId = user.Id,
+                            CategoryId = salaryCategory.Id,
+                            Amount = 5000 + rnd.Next(-300, 500),
+                            Description = "Wyp³ata",
+                            Date = startDate.AddMonths(i).AddDays(1)
+                        });
+                    }
+
+                    // losowe wydatki
+                    for (int i = 0; i < 200; i++)
+                    {
+                        DateTime date;
+
+                        do
+                        {
+                            date = startDate.AddDays(rnd.Next(0, 120));
+                        }
+                        while (date >= emptyWeekStart && date <= emptyWeekEnd);
+
+                        var category = rnd.Next(3);
+
+                        int categoryId;
+                        string description;
+                        decimal amount;
+
+                        switch (category)
+                        {
+                            case 0:
+                                categoryId = foodCategory.Id;
+                                description = "Zakupy spo¿ywcze";
+                                amount = rnd.Next(10, 200);
+                                break;
+
+                            case 1:
+                                categoryId = transportCategory.Id;
+                                description = "Transport";
+                                amount = rnd.Next(5, 80);
+                                break;
+
+                            default:
+                                categoryId = entertainmentCategory.Id;
+                                description = "Rozrywka";
+                                amount = rnd.Next(20, 300);
+                                break;
+                        }
+
+                        transactions.Add(new Transaction
+                        {
+                            UserId = user.Id,
+                            CategoryId = categoryId,
+                            Amount = amount,
+                            Description = description,
+                            Date = date
+                        });
+                    }
+
+                    db.Transactions.AddRange(transactions);
                     db.SaveChanges();
                 }
             }
@@ -111,6 +222,34 @@ namespace Budget_Chatbot
                     Info = "Sukces! Zapisano w bazie.",
                     SavedTransaction = transaction
                 });
+            });
+
+            // SALDO
+            app.MapGet("/api/reports/balance/{userId}", (int userId, ReportsService service) =>
+            {
+                var result = service.GetBalance(userId);
+                return Results.Ok(result);
+            });
+
+            // WYKRES SALDA
+            app.MapGet("/api/reports/balance-chart/{userId}", (int userId, DateTime? startDate, DateTime? endDate, ReportsService service) =>
+            {
+                var result = service.GetBalanceChart(userId, startDate, endDate);
+                return Results.Ok(result);
+            });
+
+            // UDZIA£ KATEGORII WYDATKÓW W CZASIE
+            app.MapGet("/api/reports/weekly-category-share/{userId}", (int userId, DateTime? startDate, DateTime? endDate, ReportsService service) =>
+            {
+                var result = service.GetWeeklyExpenseCategoryShare(userId, startDate, endDate);
+                return Results.Ok(result);
+            });
+
+            // TOP WYDATKÓW
+            app.MapGet("/api/reports/top-expenses/{userId}", (int userId, DateTime? startDate, DateTime? endDate, ReportsService service) =>
+            {
+                var result = service.GetTopExpenses(userId, startDate, endDate);
+                return Results.Ok(result);
             });
 
             app.Run();
