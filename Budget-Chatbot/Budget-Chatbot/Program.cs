@@ -40,6 +40,7 @@ namespace Budget_Chatbot
             // Rejestracja ReportsService
             builder.Services.AddScoped<Budget_Chatbot.Services.ReportsService>();
             builder.Services.AddScoped<BudgetChatbot.Services.TransactionBotService>();
+            builder.Services.AddScoped<Budget_Chatbot.Services.AdvancedChartsService>();
 
 
             var app = builder.Build();
@@ -253,6 +254,21 @@ namespace Budget_Chatbot
             });
 
             app.Run();
+
+            app.MapGet("/api/reports/advanced/category-bar/{userId}", (int userId, DateTime? startDate, DateTime? endDate, Budget_Chatbot.Services.AdvancedChartsService service) =>
+            {
+                return Results.Ok(service.GetCategoryBarChart(userId, startDate, endDate));
+            });
+
+            app.MapGet("/api/reports/advanced/category-line-time/{userId}", (int userId, DateTime? startDate, DateTime? endDate, Budget_Chatbot.Services.AdvancedChartsService service) =>
+            {
+                return Results.Ok(service.GetCategoryLineChartOverTime(userId, startDate, endDate));
+            });
+
+            app.MapGet("/api/reports/advanced/summary-bar-time/{userId}", (int userId, DateTime? startDate, DateTime? endDate, Budget_Chatbot.Services.AdvancedChartsService service) =>
+            {
+                return Results.Ok(service.GetSummaryBarChartOverTime(userId, startDate, endDate));
+            });
         }
     }
 }

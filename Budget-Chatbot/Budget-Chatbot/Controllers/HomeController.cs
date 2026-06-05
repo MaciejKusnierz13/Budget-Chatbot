@@ -23,6 +23,14 @@ namespace Budget_Chatbot.Controllers
             return View();
         }
 
+        // =========================================================================
+        // TUTAJ DOPISALIŚMY NOWĄ AKCJĘ DLA TWOICH WYKRESÓW
+        // =========================================================================
+        public IActionResult Charts()
+        {
+            return View(); // Ta linijka otworzy plik Views/Home/Charts.cshtml
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

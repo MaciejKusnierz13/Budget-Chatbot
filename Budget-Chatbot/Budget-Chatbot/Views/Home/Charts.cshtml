@@ -1,0 +1,163 @@
+﻿@{
+    ViewData["Title"] = "Zaawansowane Raporty";
+}
+
+<div class="container mt-4">
+    <h2>Analiza Budżetu</h2>
+
+    <div class="row my-4 bg-light p-3 rounded">
+        <div class="col-md-4">
+            <label>Od (From):</label>
+            <input type="date" id="startDate" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label>Do (To):</label>
+            <input type="date" id="endDate" class="form-control" />
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+            <button onclick="loadAllCharts()" class="btn btn-primary w-100">Generuj Wszystkie Wykresy</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card p-3 shadow-sm">
+                <h5>Wydatki i Przychody wg Kategorii</h5>
+                <canvas id="categoryBarChart"></canvas>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card p-3 shadow-sm">
+                <h5>Miesięczne Podsumowanie Sumaryczne</h5>
+                <canvas id="summaryBarChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card p-3 shadow-sm">
+                <h5>Wydatki i Przychody w Czasie (Podział na Kategorie)</h5>
+                <canvas id="categoryLineChart" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let catChart = null;
+    let sumChart = null;
+    let lineChart = null;
+    const userId = 1; // ID testowego użytkownika z seedowania
+
+    // Główna funkcja odświeżająca wszystkie 3 wykresy na raz
+    async function loadAllCharts() {
+        const start = document.getElementById('startDate').value;
+        const end = document.getElementById('endDate').value;
+        let queryParams = (start && end) ? `?startDate=${start}&endDate=${end}` : "";
+
+        await Promise.all([
+            loadCategoryBarChart(queryParams),
+            loadSummaryBarChart(queryParams),
+            loadCategoryLineChart(queryParams) // Wywołanie nowego wykresu liniowego
+        ]);
+    }
+
+    // WYKRES 1: Słupkowy po kategoriach
+    async function loadCategoryBarChart(queryParams) {
+        const res = await fetch(`/api/reports/advanced/category-bar/${userId}${queryParams}`);
+        const data = await res.json();
+
+        if (catChart) catChart.destroy();
+
+        const ctx = document.getElementById('categoryBarChart').getContext('2d');
+        catChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.categoryName),
+                datasets: [{
+                    label: 'Kwota (PLN)',
+                    data: data.map(d => d.amount),
+                    backgroundColor: data.map(d => d.isExpense ? 'rgba(220, 53, 69, 0.7)' : 'rgba(40, 167, 69, 0.7)')
+                }]
+            }
+        });
+    }
+
+    // WYKRES 3: Słupkowy sumaryczny w czasie
+    async function loadSummaryBarChart(queryParams) {
+        const res = await fetch(`/api/reports/advanced/summary-bar-time/${userId}${queryParams}`);
+        const data = await res.json();
+
+        if (sumChart) sumChart.destroy();
+
+        const ctx = document.getElementById('summaryBarChart').getContext('2d');
+        sumChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.period),
+                datasets: [
+                    { label: 'Przychody', data: data.map(d => d.totalIncomes), backgroundColor: 'rgba(40, 167, 69, 0.7)' },
+                    { label: 'Wydatki', data: data.map(d => d.totalExpenses), backgroundColor: 'rgba(220, 53, 69, 0.7)' }
+                ]
+            }
+        });
+    }
+
+    // WYKRES 2: NOWY! Liniowy z podziałem na kategorie w czasie
+    async function loadCategoryLineChart(queryParams) {
+        const res = await fetch(`/api/reports/advanced/category-line-time/${userId}${queryParams}`);
+        const data = await res.json();
+
+        if (lineChart) lineChart.destroy();
+
+        // Pobieramy unikalne daty jako etykiety osi X
+        const labels = [...new Set(data.map(item => item.date))].sort();
+        // Pobieramy unikalne nazwy kategorii, żeby stworzyć osobne linie
+        const categories = [...new Set(data.map(item => item.category))];
+
+        // Paleta kolorów dla poszczególnych linii kategorii
+        const colors = {
+            'Jedzenie': 'rgb(220, 53, 69)',
+            'Transport': 'rgb(255, 193, 7)',
+            'Rozrywka': 'rgb(13, 110, 253)',
+            'Wypłata': 'rgb(40, 167, 69)'
+        };
+
+        // Mapowanie danych na linie (datasets) w formacie Chart.js
+        const datasets = categories.map(cat => {
+            const chartData = labels.map(date => {
+                const found = data.find(item => item.date === date && item.category === cat);
+                return found ? found.total : 0; // Jeśli w danym dniu nie było transakcji z tej kategorii, wpisujemy 0
+            });
+
+            return {
+                label: cat,
+                data: chartData,
+                borderColor: colors[cat] || '#6c757d',
+                backgroundColor: 'transparent',
+                tension: 0.2 // Lekkie zaokrąglenie linii
+            };
+        });
+
+        const ctx = document.getElementById('categoryLineChart').getContext('2d');
+        lineChart = new Chart(ctx, {
+            type: 'line', // WYKRES LINIOWY
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    // Automatyczne ładowanie przy wejściu na stronę
+    document.addEventListener("DOMContentLoaded", loadAllCharts);
+</script>
