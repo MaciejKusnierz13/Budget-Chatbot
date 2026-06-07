@@ -42,6 +42,13 @@ namespace Budget_Chatbot
             builder.Services.AddScoped<BudgetChatbot.Services.TransactionBotService>();
             builder.Services.AddScoped<Budget_Chatbot.Services.AdvancedChartsService>();
 
+            builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromHours(8);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
 
             var app = builder.Build();
 
@@ -63,6 +70,8 @@ namespace Budget_Chatbot
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseSession();
 
             app.UseAuthorization();
 
@@ -211,12 +220,23 @@ namespace Budget_Chatbot
             app.MapPost("/api/chat", async (string message, TransactionBotService botService) =>
             {
                 // Na sztywno podajemy ID testowego u¿ytkownika (1), którego stworzyliœmy wy¿ej
+                var words = message.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (words.Length <= 1 && !System.Text.RegularExpressions.Regex.IsMatch(message, @"\d"))
+                    return Results.BadRequest("Wiadomoœæ wygl¹da jak test lub jest zbyt krótka. Napisz np. 'Kawa 12 z³'.");
+
                 var transaction = await botService.ProcessMessageAndSaveAsync(1, message);
 
                 if (transaction == null)
-                {
                     return Results.BadRequest("Bot nie zrozumia³ transakcji lub wyst¹pi³ b³¹d.");
-                }
+
+                // kwota
+                if (transaction.Amount <= 0)
+                    return Results.BadRequest("Nie wykryto kwoty. Napisz np. 'Kawa 12 z³'.");
+
+                // proste przykladowe teksty
+                if (string.IsNullOrWhiteSpace(transaction.Description) ||
+                    transaction.Description.ToLower() is "test" or "unknown" or "brak" or "null")
+                    return Results.BadRequest("Opis transakcji jest nieprawid³owy. Spróbuj jeszcze raz.");
 
                 return Results.Ok(new
                 {
@@ -253,8 +273,6 @@ namespace Budget_Chatbot
                 return Results.Ok(result);
             });
 
-            app.Run();
-
             app.MapGet("/api/reports/advanced/category-bar/{userId}", (int userId, DateTime? startDate, DateTime? endDate, Budget_Chatbot.Services.AdvancedChartsService service) =>
             {
                 return Results.Ok(service.GetCategoryBarChart(userId, startDate, endDate));
@@ -269,6 +287,8 @@ namespace Budget_Chatbot
             {
                 return Results.Ok(service.GetSummaryBarChartOverTime(userId, startDate, endDate));
             });
+
+            app.Run();
         }
     }
 }

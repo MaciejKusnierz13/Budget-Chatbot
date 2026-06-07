@@ -1,0 +1,112 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Budget Chatbot</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: sans-serif;
+            background: #111;
+            color: #ddd;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .box {
+            width: 320px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 32px 28px;
+        }
+
+        h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #eee;
+            margin-bottom: 6px;
+        }
+
+        p {
+            font-size: 13px;
+            color: #777;
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 6px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 9px 12px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #eee;
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 16px;
+        }
+
+        input[type="text"]:focus {
+            border-color: #555;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #2a2a2a;
+            color: #eee;
+            border: 1px solid #333;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #333;
+        }
+
+        .error {
+            background: #2a1a1a;
+            border: 1px solid #5a2a2a;
+            border-radius: 6px;
+            padding: 9px 12px;
+            font-size: 13px;
+            color: #cc7777;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>Budget Chatbot</h1>
+        <p>Zaloguj się nazwą użytkownika</p>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="error">@ViewBag.Error</div>
+        }
+
+        <form method="post" action="/Account/Login">
+            @Html.AntiForgeryToken()
+            <label for="username">Nazwa użytkownika</label>
+            <input type="text" id="username" name="username" placeholder="np. TestUser" autofocus autocomplete="off" />
+            <button type="submit">Zaloguj się</button>
+        </form>
+    </div>
+</body>
+</html>
