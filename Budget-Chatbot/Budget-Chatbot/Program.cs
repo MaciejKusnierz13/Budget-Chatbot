@@ -1,9 +1,12 @@
 using AI.Integration.Configuration;
 using AI.Integration.Services;
 using Budget_Chatbot.Services;
+using BudgetChatbot.Core.DTOs;
 using BudgetChatbot.Core.Entities;
 using BudgetChatbot.Infrastructure.Data;
 using BudgetChatbot.Services;
+using Core.DTOs;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -42,6 +45,16 @@ namespace Budget_Chatbot
             builder.Services.AddScoped<BudgetChatbot.Services.TransactionBotService>();
             builder.Services.AddScoped<Budget_Chatbot.Services.AdvancedChartsService>();
 
+            // Rejestracja serwisu autoryzacji
+            builder.Services.AddScoped<AuthService>();
+
+            // W³¹czenie sesji
+            builder.Services.AddDistributedMemoryCache();
+
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromHours(12);
+            });
 
             var app = builder.Build();
 
@@ -63,6 +76,8 @@ namespace Budget_Chatbot
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseSession();
 
             app.UseAuthorization();
 
@@ -253,6 +268,73 @@ namespace Budget_Chatbot
                 return Results.Ok(result);
             });
 
+            // Endpoint Rejestracji
+            app.MapPost("/api/register", async (RegisterDto dto, AuthService authService) =>
+            {
+                bool result =
+                    await authService.RegisterAsync(dto);
+
+                if (!result)
+                {
+                    return Results.BadRequest("Taki u¿ytkownik ju¿ istnieje.");
+                }
+
+                return Results.Ok("Konto utworzone.");
+            });
+
+            // Endpoint Logowania
+
+            app.MapPost("/api/login", async (LoginDto dto, AuthService authService, HttpContext context) =>
+            {
+                // specjalny admin
+
+                if (dto.Username == "admin" &&
+                    dto.Password == "admin123")
+                {
+                    context.Session.SetString(
+                        "Role",
+                        "Admin");
+
+                    context.Session.SetString(
+                        "Username",
+                        "admin");
+
+                    return Results.Ok("Zalogowano jako admin.");
+                }
+
+                var user =
+                    await authService.LoginAsync(dto);
+
+                if (user == null)
+                {
+                    return Results.Unauthorized();
+                }
+
+                context.Session.SetString(
+                    "Role",
+                    "User");
+
+                context.Session.SetString(
+                    "Username",
+                    user.Username);
+
+                context.Session.SetInt32(
+                    "UserId",
+                    user.Id);
+
+                return Results.Ok("Zalogowano.");
+            });
+
+            // Endpoint wylogowania
+
+            app.MapPost("/api/logout", (HttpContext context) =>
+            {
+                context.Session.Clear();
+
+                return Results.Ok("Wylogowano.");
+            });
+
+            // START APKI ===============================================
             app.Run();
 
             app.MapGet("/api/reports/advanced/category-bar/{userId}", (int userId, DateTime? startDate, DateTime? endDate, Budget_Chatbot.Services.AdvancedChartsService service) =>
