@@ -334,6 +334,44 @@ namespace Budget_Chatbot
                 return Results.Ok("Wylogowano.");
             });
 
+            // CMS - panel administratora
+            app.MapGet("/api/admin", (HttpContext context) =>
+            {
+                string? role =
+                    context.Session.GetString("Role");
+
+                if (role != "Admin")
+                {
+                    return Results.Unauthorized();
+                }
+
+                return Results.Ok(
+                    "Witaj w panelu administratora.");
+            });
+
+            // Lista u¿ytkowników dla admina
+            app.MapGet("/api/admin/users", async (HttpContext context, AppDbContext db) =>
+            {
+                string? role =
+                    context.Session.GetString("Role");
+
+                if (role != "Admin")
+                {
+                    return Results.Unauthorized();
+                }
+
+                var users = await db.Users
+                    .Select(x => new
+                    {
+                        x.Id,
+                        x.Username,
+                        x.Email
+                    })
+                    .ToListAsync();
+
+                return Results.Ok(users);
+            });
+
             // START APKI ===============================================
             app.Run();
 
