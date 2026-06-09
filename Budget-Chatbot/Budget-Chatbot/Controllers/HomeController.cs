@@ -27,6 +27,7 @@ public class HomeController : Controller
 
         ViewBag.Username = HttpContext.Session.GetString("Username");
         ViewBag.UserId = HttpContext.Session.GetInt32("UserId");
+        ViewBag.Role = HttpContext.Session.GetString("Role");
         return View();
     }
 

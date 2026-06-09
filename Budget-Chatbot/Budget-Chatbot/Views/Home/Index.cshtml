@@ -33,6 +33,18 @@
                 </svg>
                 Wykresy
             </div>
+            @if (ViewBag.Role as string == "Admin")
+            {
+                <a href="/Admin" class="sidebar-footer-btn" style="text-decoration:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    Panel admina
+                </a>
+            }
 
             <div class="sidebar-user-row">
                 <div class="sidebar-user-avatar">@userInitial</div>
@@ -61,6 +73,10 @@
                     <div class="style-dot" data-s="coral" title="Coral"></div>
                     <div class="style-dot" data-s="crimson" title="Crimson"></div>
                     <div class="style-dot" data-s="neon" title="Neon"></div>
+                </div>
+                <div class="font-size-control">
+                    <label class="font-size-label">Czcionka</label>
+                    <input class="font-size-input" id="fontSizeInput" type="number" min="2" max="64" step="1" value="14" title="Rozmiar czcionki (px)" />
                 </div>
                 <div class="topbar-user">
                     <div class="topbar-user-avatar">@userInitial</div>

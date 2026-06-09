@@ -355,3 +355,33 @@ if (btnCharts) {
 }
 
 loadChatsFromDb();
+
+var fontSizeInput = document.getElementById('fontSizeInput');
+if (fontSizeInput) {
+    var savedSize = localStorage.getItem('chatFontSize');
+    if (savedSize) {
+        fontSizeInput.value = savedSize;
+        applyFontSize(savedSize);
+    }
+
+    fontSizeInput.addEventListener('input', function () {
+        var val = parseInt(this.value);
+        if (val >= 2 && val <= 64) {
+            applyFontSize(val);
+            localStorage.setItem('chatFontSize', val);
+        }
+    });
+}
+
+function applyFontSize(size) {
+    document.querySelectorAll('.msg-bubble').forEach(function (el) {
+        el.style.fontSize = size + 'px';
+    });
+    var style = document.getElementById('dynamicFontStyle');
+    if (!style) {
+        style = document.createElement('style');
+        style.id = 'dynamicFontStyle';
+        document.head.appendChild(style);
+    }
+    style.textContent = '.msg-bubble { font-size: ' + size + 'px !important; }';
+}
