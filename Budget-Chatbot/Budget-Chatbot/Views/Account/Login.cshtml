@@ -54,7 +54,7 @@
             margin-bottom: 6px;
         }
 
-        input[type="text"] {
+        input[type="text"], input[type="password"] {
             width: 100%;
             padding: 9px 12px;
             background: #222;
@@ -65,9 +65,9 @@
             outline: none;
         }
 
-            input[type="text"]:focus {
-                border-color: #555;
-            }
+        input:focus {
+            border-color: #555;
+        }
 
         button {
             width: 100%;
@@ -93,6 +93,10 @@
             font-size: 13px;
             color: #cc7777;
         }
+
+        #passwordField {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -109,9 +113,20 @@
             @Html.AntiForgeryToken()
             <label for="username">Nazwa użytkownika</label>
             <input type="text" id="username" name="username" placeholder="Wpisz nazwę..." autofocus autocomplete="off" />
-            <br /><br />
+            <div id="passwordField" style="margin-top:12px;">
+                <label for="password">Hasło</label>
+                <input type="password" id="password" name="password" placeholder="Hasło..." />
+            </div>
+            <br />
             <button type="submit">Wejdź</button>
         </form>
     </div>
+
+    <script>
+        document.getElementById('username').addEventListener('input', function() {
+            var pf = document.getElementById('passwordField');
+            pf.style.display = this.value.trim() === 'admin' ? 'block' : 'none';
+        });
+    </script>
 </body>
 </html>

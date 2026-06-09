@@ -1,0 +1,201 @@
+@model List<Budget_Chatbot.Controllers.AdminUserViewModel>
+@{
+    ViewData["Title"] = "Panel Admina";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel Admina</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: sans-serif;
+            background: #111;
+            color: #ddd;
+            min-height: 100vh;
+            padding: 32px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        h1 { font-size: 20px; font-weight: 600; color: #eee; }
+
+        .back {
+            font-size: 13px;
+            color: #666;
+            text-decoration: none;
+        }
+
+        .back:hover { color: #aaa; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            text-align: left;
+            padding: 10px 14px;
+            background: #1a1a1a;
+            color: #888;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        td {
+            padding: 11px 14px;
+            border-bottom: 1px solid #1e1e1e;
+            color: #ccc;
+        }
+
+        tr:hover td { background: #161616; }
+
+        .btn-delete {
+            background: none;
+            border: 1px solid #5a1a1a;
+            color: #cc5555;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .btn-delete:hover {
+            background: #5a1a1a;
+            color: #ffaaaa;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 28px;
+            width: 320px;
+        }
+
+        .modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 10px; color: #eee; }
+        .modal p { font-size: 13px; color: #888; margin-bottom: 20px; }
+
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+        .btn-cancel {
+            padding: 7px 16px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #aaa;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .btn-confirm {
+            padding: 7px 16px;
+            background: #7a1a1a;
+            border: none;
+            border-radius: 6px;
+            color: #ffaaaa;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-confirm:hover { background: #901a1a; }
+
+        .empty { padding: 24px; text-align: center; color: #555; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Panel Admina</h1>
+        <a href="/" class="back">← Wróć do chatu</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty">Brak użytkowników.</div>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nazwa użytkownika</th>
+                    <th>Email</th>
+                    <th>Data rejestracji</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>@user.Id</td>
+                        <td>@user.Username</td>
+                        <td>@user.Email</td>
+                        <td>@user.CreatedAt.ToString("dd.MM.yyyy")</td>
+                        <td>
+                            <button class="btn-delete" onclick="confirmDelete(@user.Id, '@user.Username')">Usuń</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3>Usuń użytkownika</h3>
+            <p id="modalText">Czy na pewno chcesz usunąć tego użytkownika?</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">Anuluj</button>
+                <form id="deleteForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn-confirm">Usuń</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmDelete(id, username) {
+            document.getElementById('modalText').textContent = 'Czy na pewno chcesz usunąć użytkownika "' + username + '"? Zostaną usunięte wszystkie jego dane.';
+            document.getElementById('deleteForm').action = '/Admin/DeleteUser/' + id;
+            document.getElementById('modalOverlay').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('open');
+        }
+
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+    </script>
+</body>
+</html>

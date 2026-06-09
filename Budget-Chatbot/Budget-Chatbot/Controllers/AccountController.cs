@@ -17,13 +17,16 @@ public class AccountController : Controller
     public IActionResult Login()
     {
         if (HttpContext.Session.GetString("Username") != null)
+        {
+            if (HttpContext.Session.GetString("Role") == "Admin")
+                return RedirectToAction("Index", "Admin");
             return RedirectToAction("Index", "Home");
-
+        }
         return View();
     }
 
     [HttpPost]
-    public IActionResult Login(string username)
+    public IActionResult Login(string username, string? password)
     {
         if (string.IsNullOrWhiteSpace(username))
         {
@@ -31,8 +34,14 @@ public class AccountController : Controller
             return View();
         }
 
-        username = username.Trim();
+        if (username.Trim() == "admin" && password == "admin123")
+        {
+            HttpContext.Session.SetString("Role", "Admin");
+            HttpContext.Session.SetString("Username", "admin");
+            return RedirectToAction("Index", "Admin");
+        }
 
+        username = username.Trim();
         var user = _db.Users.FirstOrDefault(u => u.Username == username);
 
         if (user == null)
@@ -48,6 +57,7 @@ public class AccountController : Controller
 
         HttpContext.Session.SetInt32("UserId", user.Id);
         HttpContext.Session.SetString("Username", user.Username);
+        HttpContext.Session.SetString("Role", "User");
 
         return RedirectToAction("Index", "Home");
     }

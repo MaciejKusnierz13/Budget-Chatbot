@@ -108,7 +108,7 @@ function renderSidebar() {
             '<div class="chat-item-title">' + escHtml(chat.title) + '</div>' +
             '<button class="chat-delete-btn" title="Usuń">✕</button>';
 
-        item.querySelector('.chat-item-title').addEventListener('click', function () {
+        item.addEventListener('click', function () {
             state.activeChatId = chat.id;
             document.getElementById('topbarTitle').textContent = chat.title;
             renderSidebar();
