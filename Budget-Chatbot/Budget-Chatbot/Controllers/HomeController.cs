@@ -35,6 +35,7 @@ public class HomeController : Controller
         var redirect = RequireLogin();
         if (redirect != null) return redirect;
 
+        ViewBag.UserId = HttpContext.Session.GetInt32("UserId");
         return View();
     }
 

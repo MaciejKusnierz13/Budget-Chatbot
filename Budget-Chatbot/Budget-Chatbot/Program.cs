@@ -19,9 +19,9 @@ namespace Budget_Chatbot
             var builder = WebApplication.CreateBuilder(args);
 
             // Rejestracja SQL Server
-
             builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
             // Add services to the container.
             builder.Services.AddControllersWithViews();
             builder.Services.Configure<LmStudioOptions>(builder.Configuration.GetSection("LMStudio"));
@@ -50,7 +50,6 @@ namespace Budget_Chatbot
 
             // W³¹czenie sesji
             builder.Services.AddDistributedMemoryCache();
-
             builder.Services.AddSession(options =>
             {
                 options.IdleTimeout = TimeSpan.FromHours(12);
@@ -74,11 +73,8 @@ namespace Budget_Chatbot
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
             app.UseRouting();
-
             app.UseSession();
-
             app.UseAuthorization();
 
             app.MapControllerRoute(
@@ -223,14 +219,15 @@ namespace Budget_Chatbot
             }
 
             // --- 2. TESTOWY ENDPOINT API ---
-            app.MapPost("/api/chat", async (string message, TransactionBotService botService) =>
+            app.MapPost("/api/chat", async (string message, HttpContext ctx, TransactionBotService botService, AppDbContext db) =>
             {
-                // Na sztywno podajemy ID testowego u¿ytkownika (1), którego stworzyliœmy wy¿ej
+                var userId = ctx.Session.GetInt32("UserId") ?? 1;
+
                 var words = message.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 if (words.Length <= 1 && !System.Text.RegularExpressions.Regex.IsMatch(message, @"\d"))
                     return Results.BadRequest("Wiadomoœæ wygl¹da jak test lub jest zbyt krótka. Napisz np. 'Kawa 12 z³'.");
 
-                var transaction = await botService.ProcessMessageAndSaveAsync(1, message);
+                var transaction = await botService.ProcessMessageAndSaveAsync(userId, message);
 
                 if (transaction == null)
                     return Results.BadRequest("Bot nie zrozumia³ transakcji lub wyst¹pi³ b³¹d.");
@@ -249,6 +246,71 @@ namespace Budget_Chatbot
                     Info = "Sukces! Zapisano w bazie.",
                     SavedTransaction = transaction
                 });
+            });
+
+            // ZAPIS WIADOMOŒCI DO HISTORII CHATU
+            app.MapPost("/api/chat/history", async (ChatMessageDto dto, HttpContext ctx, AppDbContext db) =>
+            {
+                var userId = ctx.Session.GetInt32("UserId") ?? 1;
+
+                var entry = new ChatHistory
+                {
+                    UserId = userId,
+                    SessionId = dto.SessionId,
+                    ChatTitle = dto.ChatTitle,
+                    Role = dto.Role,
+                    Content = dto.Content,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                db.ChatHistories.Add(entry);
+                await db.SaveChangesAsync();
+
+                return Results.Ok();
+            });
+
+            // £ADOWANIE HISTORII CHATÓW DLA U¯YTKOWNIKA
+            app.MapGet("/api/chat/history", async (HttpContext ctx, AppDbContext db) =>
+            {
+                var userId = ctx.Session.GetInt32("UserId") ?? 1;
+
+                var messages = await db.ChatHistories
+                    .Where(h => h.UserId == userId)
+                    .OrderBy(h => h.Timestamp)
+                    .Select(h => new
+                    {
+                        h.SessionId,
+                        h.ChatTitle,
+                        h.Role,
+                        h.Content,
+                        h.Timestamp
+                    })
+                    .ToListAsync();
+
+                var chats = messages
+                    .GroupBy(m => m.SessionId)
+                    .Select(g => new
+                    {
+                        SessionId = g.Key,
+                        Title = g.First().ChatTitle,
+                        Messages = g.Select(m => new { m.Role, m.Content, m.Timestamp }).ToList()
+                    })
+                    .OrderByDescending(c => c.Messages.Last().Timestamp)
+                    .ToList();
+
+                return Results.Ok(chats);
+            });
+
+            // USUWANIE CHATU
+            app.MapDelete("/api/chat/history/{sessionId}", async (string sessionId, HttpContext ctx, AppDbContext db) =>
+            {
+                var userId = ctx.Session.GetInt32("UserId") ?? 1;
+
+                var entries = db.ChatHistories.Where(h => h.UserId == userId && h.SessionId == sessionId);
+                db.ChatHistories.RemoveRange(entries);
+                await db.SaveChangesAsync();
+
+                return Results.Ok();
             });
 
             // SALDO
@@ -282,8 +344,7 @@ namespace Budget_Chatbot
             // Endpoint Rejestracji
             app.MapPost("/api/register", async (RegisterDto dto, AuthService authService) =>
             {
-                bool result =
-                    await authService.RegisterAsync(dto);
+                bool result = await authService.RegisterAsync(dto);
 
                 if (!result)
                 {
@@ -294,77 +355,54 @@ namespace Budget_Chatbot
             });
 
             // Endpoint Logowania
-
             app.MapPost("/api/login", async (LoginDto dto, AuthService authService, HttpContext context) =>
             {
                 // specjalny admin
-
-                if (dto.Username == "admin" &&
-                    dto.Password == "admin123")
+                if (dto.Username == "admin" && dto.Password == "admin123")
                 {
-                    context.Session.SetString(
-                        "Role",
-                        "Admin");
-
-                    context.Session.SetString(
-                        "Username",
-                        "admin");
-
+                    context.Session.SetString("Role", "Admin");
+                    context.Session.SetString("Username", "admin");
                     return Results.Ok("Zalogowano jako admin.");
                 }
 
-                var user =
-                    await authService.LoginAsync(dto);
+                var user = await authService.LoginAsync(dto);
 
                 if (user == null)
                 {
                     return Results.Unauthorized();
                 }
 
-                context.Session.SetString(
-                    "Role",
-                    "User");
-
-                context.Session.SetString(
-                    "Username",
-                    user.Username);
-
-                context.Session.SetInt32(
-                    "UserId",
-                    user.Id);
+                context.Session.SetString("Role", "User");
+                context.Session.SetString("Username", user.Username);
+                context.Session.SetInt32("UserId", user.Id);
 
                 return Results.Ok("Zalogowano.");
             });
 
             // Endpoint wylogowania
-
             app.MapPost("/api/logout", (HttpContext context) =>
             {
                 context.Session.Clear();
-
                 return Results.Ok("Wylogowano.");
             });
 
             // CMS - panel administratora
             app.MapGet("/api/admin", (HttpContext context) =>
             {
-                string? role =
-                    context.Session.GetString("Role");
+                string? role = context.Session.GetString("Role");
 
                 if (role != "Admin")
                 {
                     return Results.Unauthorized();
                 }
 
-                return Results.Ok(
-                    "Witaj w panelu administratora.");
+                return Results.Ok("Witaj w panelu administratora.");
             });
 
             // Lista u¿ytkowników dla admina
             app.MapGet("/api/admin/users", async (HttpContext context, AppDbContext db) =>
             {
-                string? role =
-                    context.Session.GetString("Role");
+                string? role = context.Session.GetString("Role");
 
                 if (role != "Admin")
                 {
@@ -372,19 +410,11 @@ namespace Budget_Chatbot
                 }
 
                 var users = await db.Users
-                    .Select(x => new
-                    {
-                        x.Id,
-                        x.Username,
-                        x.Email
-                    })
+                    .Select(x => new { x.Id, x.Username, x.Email })
                     .ToListAsync();
 
                 return Results.Ok(users);
             });
-
-            // START APKI ===============================================
-            app.Run();
 
             app.MapGet("/api/reports/advanced/category-bar/{userId}", (int userId, DateTime? startDate, DateTime? endDate, Budget_Chatbot.Services.AdvancedChartsService service) =>
             {
@@ -401,6 +431,7 @@ namespace Budget_Chatbot
                 return Results.Ok(service.GetSummaryBarChartOverTime(userId, startDate, endDate));
             });
 
+            // START APKI ===============================================
             app.Run();
         }
     }

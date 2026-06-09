@@ -56,9 +56,13 @@ overlay.addEventListener('click', function () {
     overlay.classList.remove('open');
 });
 
+function generateSessionId() {
+    return 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+}
+
 function createNewChat() {
-    var id = Date.now();
-    var chat = { id: id, title: 'Nowy chat', messages: [], isNew: true };
+    var id = generateSessionId();
+    var chat = { id: id, title: 'Nowy chat', messages: [] };
     state.chats.unshift(chat);
     state.activeChatId = id;
     renderSidebar();
@@ -67,8 +71,13 @@ function createNewChat() {
     document.getElementById('messageInput').focus();
 }
 
-function deleteChat(id) {
+async function deleteChat(id) {
+    try {
+        await fetch('/api/chat/history/' + encodeURIComponent(id), { method: 'DELETE' });
+    } catch (e) { }
+
     state.chats = state.chats.filter(function (c) { return c.id !== id; });
+
     if (state.activeChatId === id) {
         if (state.chats.length > 0) {
             state.activeChatId = state.chats[0].id;
@@ -78,6 +87,7 @@ function deleteChat(id) {
             return;
         }
     }
+
     renderSidebar();
     renderMessages();
 }
@@ -125,7 +135,7 @@ function renderMessages() {
     if (!chat || chat.messages.length === 0) {
         wrapper.innerHTML =
             '<div class="empty-state">' +
-            '<p>Wpisz wydatek, np. <em>"Kawa 12 zł"</em></p>' +
+            '<p>Wpisz wydatek, np. <em>Kawa 12 zł</em></p>' +
             '</div>';
         return;
     }
@@ -187,6 +197,21 @@ function removeTypingIndicator() {
     if (el) el.remove();
 }
 
+async function saveChatMessage(sessionId, chatTitle, role, content) {
+    try {
+        await fetch('/api/chat/history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sessionId: sessionId,
+                chatTitle: chatTitle,
+                role: role,
+                content: content
+            })
+        });
+    } catch (e) { }
+}
+
 async function sendMessage() {
     if (state.sending) return;
     var input = document.getElementById('messageInput');
@@ -208,6 +233,8 @@ async function sendMessage() {
     input.style.height = 'auto';
     renderMessages();
 
+    await saveChatMessage(chat.id, chat.title, 'User', text);
+
     state.sending = true;
     document.getElementById('sendBtn').disabled = true;
     addTypingIndicator();
@@ -219,9 +246,12 @@ async function sendMessage() {
         if (response.ok) {
             var data = await response.json();
             var t = data.savedTransaction;
+            var botText = '✅ Zapisano transakcję!';
+            var botContent = botText + ' | kwota:' + t.amount + ' kategoria:' + (t.categoryId) + ' opis:' + (t.description || '');
+
             chat.messages.push({
                 role: 'bot',
-                text: '✅ Zapisano transakcję!',
+                text: botText,
                 time: nowTime(),
                 transaction: {
                     amount: t.amount,
@@ -230,14 +260,14 @@ async function sendMessage() {
                     description: t.description
                 }
             });
+
+            await saveChatMessage(chat.id, chat.title, 'Bot', botContent);
             showToast('Zapisano');
         } else {
             var errText = await response.text();
-            chat.messages.push({
-                role: 'bot',
-                text: '❌ ' + (errText || 'Nie udało się zapisać. Spróbuj dokładniej.'),
-                time: nowTime()
-            });
+            var botMsg = errText || 'Nie udało się zapisać. Spróbuj dokładniej.';
+            chat.messages.push({ role: 'bot', text: '❌ ' + botMsg, time: nowTime() });
+            await saveChatMessage(chat.id, chat.title, 'Bot', '❌ ' + botMsg);
             showToast('Błąd', true);
         }
     } catch (err) {
@@ -249,6 +279,55 @@ async function sendMessage() {
     state.sending = false;
     document.getElementById('sendBtn').disabled = false;
     renderMessages();
+}
+
+async function loadChatsFromDb() {
+    try {
+        var response = await fetch('/api/chat/history');
+        if (!response.ok) return;
+
+        var chats = await response.json();
+
+        chats.forEach(function (c) {
+            var messages = c.messages.map(function (m) {
+                var isBot = m.role === 'Bot';
+                var text = m.content;
+                var transaction = null;
+
+                if (isBot && m.content.includes('| kwota:')) {
+                    var parts = m.content.split(' | ');
+                    text = parts[0];
+                    var meta = parts[1] || '';
+                    var kwota = parseFloat((meta.match(/kwota:([\d.]+)/) || [])[1]) || 0;
+                    var kat = parseInt((meta.match(/kategoria:(\d+)/) || [])[1]) || 0;
+                    var opis = (meta.match(/opis:(.*)/) || [])[1] || '';
+                    if (kwota > 0) {
+                        transaction = { amount: kwota, categoryId: kat, description: opis };
+                    }
+                }
+
+                return {
+                    role: isBot ? 'bot' : 'user',
+                    text: text,
+                    time: new Date(m.timestamp).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
+                    transaction: transaction
+                };
+            });
+
+            state.chats.push({ id: c.sessionId, title: c.title, messages: messages });
+        });
+
+        if (state.chats.length > 0) {
+            state.activeChatId = state.chats[0].id;
+            document.getElementById('topbarTitle').textContent = state.chats[0].title;
+            renderSidebar();
+            renderMessages();
+        } else {
+            createNewChat();
+        }
+    } catch (e) {
+        createNewChat();
+    }
 }
 
 var textarea = document.getElementById('messageInput');
@@ -275,4 +354,4 @@ if (btnCharts) {
     });
 }
 
-createNewChat();
+loadChatsFromDb();

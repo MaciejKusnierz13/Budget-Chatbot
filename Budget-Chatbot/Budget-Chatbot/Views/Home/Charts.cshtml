@@ -1,5 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Zaawansowane Raporty";
+    var userId = ViewBag.UserId ?? 1;
 }
 
 <div class="container mt-4">
@@ -50,9 +51,8 @@
     let catChart = null;
     let sumChart = null;
     let lineChart = null;
-    const userId = 1; // ID testowego użytkownika z seedowania
+    const userId = @userId;
 
-    // Główna funkcja odświeżająca wszystkie 3 wykresy na raz
     async function loadAllCharts() {
         const start = document.getElementById('startDate').value;
         const end = document.getElementById('endDate').value;
@@ -61,11 +61,10 @@
         await Promise.all([
             loadCategoryBarChart(queryParams),
             loadSummaryBarChart(queryParams),
-            loadCategoryLineChart(queryParams) // Wywołanie nowego wykresu liniowego
+            loadCategoryLineChart(queryParams)
         ]);
     }
 
-    // WYKRES 1: Słupkowy po kategoriach
     async function loadCategoryBarChart(queryParams) {
         const res = await fetch(`/api/reports/advanced/category-bar/${userId}${queryParams}`);
         const data = await res.json();
@@ -86,7 +85,6 @@
         });
     }
 
-    // WYKRES 3: Słupkowy sumaryczny w czasie
     async function loadSummaryBarChart(queryParams) {
         const res = await fetch(`/api/reports/advanced/summary-bar-time/${userId}${queryParams}`);
         const data = await res.json();
@@ -106,19 +104,15 @@
         });
     }
 
-    // WYKRES 2: NOWY! Liniowy z podziałem na kategorie w czasie
     async function loadCategoryLineChart(queryParams) {
         const res = await fetch(`/api/reports/advanced/category-line-time/${userId}${queryParams}`);
         const data = await res.json();
 
         if (lineChart) lineChart.destroy();
 
-        // Pobieramy unikalne daty jako etykiety osi X
         const labels = [...new Set(data.map(item => item.date))].sort();
-        // Pobieramy unikalne nazwy kategorii, żeby stworzyć osobne linie
         const categories = [...new Set(data.map(item => item.category))];
 
-        // Paleta kolorów dla poszczególnych linii kategorii
         const colors = {
             'Jedzenie': 'rgb(220, 53, 69)',
             'Transport': 'rgb(255, 193, 7)',
@@ -126,11 +120,10 @@
             'Wypłata': 'rgb(40, 167, 69)'
         };
 
-        // Mapowanie danych na linie (datasets) w formacie Chart.js
         const datasets = categories.map(cat => {
             const chartData = labels.map(date => {
                 const found = data.find(item => item.date === date && item.category === cat);
-                return found ? found.total : 0; // Jeśli w danym dniu nie było transakcji z tej kategorii, wpisujemy 0
+                return found ? found.total : 0;
             });
 
             return {
@@ -138,26 +131,20 @@
                 data: chartData,
                 borderColor: colors[cat] || '#6c757d',
                 backgroundColor: 'transparent',
-                tension: 0.2 // Lekkie zaokrąglenie linii
+                tension: 0.2
             };
         });
 
         const ctx = document.getElementById('categoryLineChart').getContext('2d');
         lineChart = new Chart(ctx, {
-            type: 'line', // WYKRES LINIOWY
-            data: {
-                labels: labels,
-                datasets: datasets
-            },
+            type: 'line',
+            data: { labels: labels, datasets: datasets },
             options: {
                 responsive: true,
-                scales: {
-                    y: { beginAtZero: true }
-                }
+                scales: { y: { beginAtZero: true } }
             }
         });
     }
 
-    // Automatyczne ładowanie przy wejściu na stronę
     document.addEventListener("DOMContentLoaded", loadAllCharts);
 </script>
