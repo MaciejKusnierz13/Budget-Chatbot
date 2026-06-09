@@ -1,8 +1,6 @@
 ﻿var API_URL = '/api/chat';
 
 var state = {
-    profileName: 'Jan Kowalski',
-    avatarDataUrl: null,
     chats: [],
     activeChatId: null,
     sending: false
@@ -10,10 +8,6 @@ var state = {
 
 function nowTime() {
     return new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
-}
-
-function getInitials(name) {
-    return name.split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase();
 }
 
 function escHtml(str) {
@@ -39,95 +33,16 @@ document.querySelectorAll('.style-dot').forEach(function (dot) {
     });
 });
 
-var profileTrigger = document.getElementById('profileTrigger');
-var profilePopup = document.getElementById('profilePopup');
 var helpPopup = document.getElementById('helpPopup');
-var overlay = document.getElementById('overlay');
-
-profileTrigger.addEventListener('click', function (e) {
-    e.stopPropagation();
-    var isOpen = profilePopup.classList.contains('open');
-    closeAllPopups();
-    if (!isOpen) {
-        profilePopup.classList.add('open');
-        overlay.classList.add('open');
-    }
-});
-
-overlay.addEventListener('click', closeAllPopups);
-
-document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeAllPopups();
-});
-
-function closeAllPopups() {
-    profilePopup.classList.remove('open');
-    helpPopup.classList.remove('open');
-    overlay.classList.remove('open');
-}
-
-var avatarInput = document.getElementById('avatar-file-input');
-document.getElementById('popupAvatarPreview').addEventListener('click', function () {
-    avatarInput.click();
-});
-
-avatarInput.addEventListener('change', function (e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function (ev) {
-        state.avatarDataUrl = ev.target.result;
-        applyAvatar();
-    };
-    reader.readAsDataURL(file);
-});
-
-function applyAvatar() {
-    var imgs = ['topAvatarImg', 'popupAvatarImg'];
-    var inits = ['topAvatarInitials', 'popupAvatarInitials'];
-    if (state.avatarDataUrl) {
-        imgs.forEach(function (id) {
-            var el = document.getElementById(id);
-            if (el) { el.src = state.avatarDataUrl; el.style.display = 'block'; }
-        });
-        inits.forEach(function (id) {
-            var el = document.getElementById(id);
-            if (el) el.style.display = 'none';
-        });
-    } else {
-        imgs.forEach(function (id) {
-            var el = document.getElementById(id);
-            if (el) el.style.display = 'none';
-        });
-        inits.forEach(function (id) {
-            var el = document.getElementById(id);
-            if (el) el.style.display = '';
-        });
-    }
-}
-
-document.getElementById('profileSaveBtn').addEventListener('click', function () {
-    var name = document.getElementById('profileNameInput').value.trim() || 'Użytkownik';
-    state.profileName = name;
-    var initials = getInitials(name);
-    ['topAvatarInitials', 'popupAvatarInitials'].forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) el.textContent = initials;
-    });
-    closeAllPopups();
-    showToast('Zapisano');
-    renderMessages();
-});
-
 var infoBtn = document.getElementById('infoBtn');
+var overlay = document.getElementById('overlay');
 
 infoBtn.addEventListener('mouseenter', function () {
     helpPopup.classList.add('open');
 });
 
 infoBtn.addEventListener('mouseleave', function (e) {
-    var to = e.relatedTarget;
-    if (!helpPopup.contains(to)) {
+    if (!helpPopup.contains(e.relatedTarget)) {
         helpPopup.classList.remove('open');
     }
 });
@@ -136,9 +51,14 @@ helpPopup.addEventListener('mouseleave', function () {
     helpPopup.classList.remove('open');
 });
 
+overlay.addEventListener('click', function () {
+    helpPopup.classList.remove('open');
+    overlay.classList.remove('open');
+});
+
 function createNewChat() {
     var id = Date.now();
-    var chat = { id: id, title: 'Nowy chat', messages: [] };
+    var chat = { id: id, title: 'Nowy chat', messages: [], isNew: true };
     state.chats.unshift(chat);
     state.activeChatId = id;
     renderSidebar();
@@ -210,21 +130,16 @@ function renderMessages() {
         return;
     }
 
-    var initials = getInitials(state.profileName);
     var html = '';
 
     chat.messages.forEach(function (msg) {
         if (msg.role === 'user') {
-            var avatarHtml = state.avatarDataUrl
-                ? '<img src="' + state.avatarDataUrl + '" alt="" style="display:block;width:100%;height:100%;object-fit:cover;border-radius:50%">'
-                : '<span>' + initials + '</span>';
-
             html +=
                 '<div class="msg-row user">' +
-                '<div class="msg-avatar">' + avatarHtml + '</div>' +
+                '<div class="msg-avatar"><span>' + escHtml(APP_USER_INITIAL) + '</span></div>' +
                 '<div>' +
                 '<div class="msg-bubble">' + escHtml(msg.text) + '</div>' +
-                '<div class="msg-meta">' + escHtml(state.profileName) + ' · ' + msg.time + '</div>' +
+                '<div class="msg-meta">' + escHtml(APP_USERNAME) + ' · ' + msg.time + '</div>' +
                 '</div></div>';
         } else {
             var cardHtml = '';
@@ -248,12 +163,13 @@ function renderMessages() {
     });
 
     wrapper.innerHTML = html;
-    var chatArea = document.getElementById('chatArea');
-    chatArea.scrollTop = chatArea.scrollHeight;
+    document.getElementById('chatArea').scrollTop = 999999;
 }
 
 function addTypingIndicator() {
     var wrapper = document.getElementById('messagesWrapper');
+    var existing = document.getElementById('typingIndicator');
+    if (existing) existing.remove();
     var el = document.createElement('div');
     el.className = 'msg-row ai';
     el.id = 'typingIndicator';
@@ -351,7 +267,6 @@ textarea.addEventListener('keydown', function (e) {
 
 document.getElementById('sendBtn').addEventListener('click', sendMessage);
 document.getElementById('newChatBtn').addEventListener('click', createNewChat);
-document.getElementById('logoMark').addEventListener('click', createNewChat);
 
 var btnCharts = document.getElementById('btnCharts');
 if (btnCharts) {

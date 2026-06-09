@@ -8,7 +8,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Budget Chatbot</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
         body {
             font-family: sans-serif;
@@ -26,19 +30,21 @@
             border: 1px solid #2a2a2a;
             border-radius: 8px;
             padding: 32px 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
-        h1 {
-            font-size: 18px;
+        .box-title {
+            font-size: 20px;
             font-weight: 600;
             color: #eee;
-            margin-bottom: 6px;
         }
 
-        p {
+        .box-sub {
             font-size: 13px;
-            color: #777;
-            margin-bottom: 24px;
+            color: #666;
+            margin-top: -8px;
         }
 
         label {
@@ -57,12 +63,11 @@
             color: #eee;
             font-size: 14px;
             outline: none;
-            margin-bottom: 16px;
         }
 
-        input[type="text"]:focus {
-            border-color: #555;
-        }
+            input[type="text"]:focus {
+                border-color: #555;
+            }
 
         button {
             width: 100%;
@@ -76,9 +81,9 @@
             cursor: pointer;
         }
 
-        button:hover {
-            background: #333;
-        }
+            button:hover {
+                background: #333;
+            }
 
         .error {
             background: #2a1a1a;
@@ -87,14 +92,13 @@
             padding: 9px 12px;
             font-size: 13px;
             color: #cc7777;
-            margin-bottom: 16px;
         }
     </style>
 </head>
 <body>
     <div class="box">
-        <h1>Budget Chatbot</h1>
-        <p>Zaloguj się nazwą użytkownika</p>
+        <div class="box-title">Budget Chatbot</div>
+        <div class="box-sub">Zaloguj się lub utwórz nowe konto</div>
 
         @if (ViewBag.Error != null)
         {
@@ -104,8 +108,9 @@
         <form method="post" action="/Account/Login">
             @Html.AntiForgeryToken()
             <label for="username">Nazwa użytkownika</label>
-            <input type="text" id="username" name="username" placeholder="np. TestUser" autofocus autocomplete="off" />
-            <button type="submit">Zaloguj się</button>
+            <input type="text" id="username" name="username" placeholder="Wpisz nazwę..." autofocus autocomplete="off" />
+            <br /><br />
+            <button type="submit">Wejdź</button>
         </form>
     </div>
 </body>

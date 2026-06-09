@@ -1,6 +1,8 @@
 ﻿@{
     ViewData["Title"] = "Budget Chatbot";
     Layout = null;
+    var username = ViewBag.Username as string ?? "Użytkownik";
+    var userInitial = username[0].ToString().ToUpper();
 }
 <!DOCTYPE html>
 <html lang="pl">
@@ -16,7 +18,7 @@
 
     <aside class="sidebar">
         <div class="sidebar-header">
-            <div class="logo-mark" id="logoMark">B</div>
+            <span class="app-title">Budget Chatbot</span>
         </div>
 
         <button class="new-chat-btn" id="newChatBtn">+ Nowy chat</button>
@@ -33,8 +35,8 @@
             </div>
 
             <div class="sidebar-user-row">
-                <div class="sidebar-user-avatar">@(ViewBag.Username?[0].ToString().ToUpper() ?? "?")</div>
-                <div class="sidebar-user-name">@(ViewBag.Username ?? "Użytkownik")</div>
+                <div class="sidebar-user-avatar">@userInitial</div>
+                <div class="sidebar-user-name">@username</div>
                 <form method="post" action="/Account/Logout" style="margin-left:auto">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="sidebar-logout-btn" title="Wyloguj">
@@ -60,42 +62,30 @@
                     <div class="style-dot" data-s="crimson" title="Crimson"></div>
                     <div class="style-dot" data-s="neon" title="Neon"></div>
                 </div>
-                <div class="profile-trigger" id="profileTrigger" title="Profil">
-                    <img id="topAvatarImg" alt="" />
-                    <span class="avatar-initials" id="topAvatarInitials">JK</span>
+                <div class="topbar-user">
+                    <div class="topbar-user-avatar">@userInitial</div>
+                    <span class="topbar-user-name">@username</span>
                 </div>
             </div>
         </div>
 
-        <!-- Popup profilu -->
-        <div class="profile-popup" id="profilePopup">
-            <div class="popup-section-label">Profil</div>
-            <div class="popup-avatar-row">
-                <div class="popup-avatar-preview" id="popupAvatarPreview" title="Zmień zdjęcie">
-                    <img id="popupAvatarImg" alt="" />
-                    <span class="big-initials" id="popupAvatarInitials">JK</span>
-                    <div class="avatar-overlay">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                            <polyline points="17 8 12 3 7 8" />
-                            <line x1="12" y1="3" x2="12" y2="15" />
-                        </svg>
-                    </div>
-                </div>
-                <div class="avatar-hint">Kliknij aby zmienić zdjęcie</div>
-                <input type="file" id="avatar-file-input" accept="image/*" />
-            </div>
-            <div class="popup-divider"></div>
-            <div class="popup-section-label" style="margin-bottom:6px">Nazwa</div>
-            <input class="popup-name-input" id="profileNameInput" type="text" value="Jan Kowalski" placeholder="Twoja nazwa" />
-            <button class="popup-save-btn" id="profileSaveBtn">Zapisz</button>
-        </div>
-
-        <!-- Okienko pomocy -->
         <div class="help-popup" id="helpPopup">
             <div class="help-title">Jak używać Budget Chatbot?</div>
-            <div class="help-content" id="helpContent">
-                <!-- wypełniane przez JS -->
+            <div class="help-content">
+                Wpisz wydatek lub przychód naturalnym językiem.
+
+                Przykłady:
+                • "Kawa 12 zł"
+                • "Bilet tramwajowy 4.40"
+                • "Wypłata 5000 zł"
+
+                Bot automatycznie rozpozna kwotę,
+                kategorię i opis, a następnie
+                zapisze transakcję w bazie.
+
+                Jeśli bot nie zrozumie wiadomości,
+                dostaniesz komunikat błędu.
+                Spróbuj napisać dokładniej.
             </div>
         </div>
 
@@ -125,6 +115,10 @@
     <div class="overlay" id="overlay"></div>
     <div class="toast" id="toast">Zapisano</div>
 
+    <script>
+        var APP_USERNAME = '@username';
+        var APP_USER_INITIAL = '@userInitial';
+    </script>
     <script src="~/js/site.js"></script>
 </body>
 </html>
