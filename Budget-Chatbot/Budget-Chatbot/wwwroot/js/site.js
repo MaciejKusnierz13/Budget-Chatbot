@@ -38,6 +38,10 @@ var infoBtn = document.getElementById('infoBtn');
 var overlay = document.getElementById('overlay');
 
 infoBtn.addEventListener('mouseenter', function () {
+    var rect = infoBtn.getBoundingClientRect();
+    helpPopup.style.left = rect.left + 'px';
+    helpPopup.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
+    helpPopup.style.top = 'auto';
     helpPopup.classList.add('open');
 });
 
@@ -374,14 +378,19 @@ if (fontSizeInput) {
 }
 
 function applyFontSize(size) {
-    document.querySelectorAll('.msg-bubble').forEach(function (el) {
-        el.style.fontSize = size + 'px';
-    });
+    var s = parseInt(size);
     var style = document.getElementById('dynamicFontStyle');
     if (!style) {
         style = document.createElement('style');
         style.id = 'dynamicFontStyle';
         document.head.appendChild(style);
     }
-    style.textContent = '.msg-bubble { font-size: ' + size + 'px !important; }';
+    style.textContent = [
+        '.msg-bubble, .msg-meta, .chat-item-title, .sidebar-footer-btn,',
+        '.sidebar-user-name, .app-title, .topbar-title, .topbar-user-name,',
+        '.new-chat-btn, .sidebar-section-label, .empty-state p,',
+        '.input-wrap textarea, .help-title, .help-content, .toast {',
+        '    font-size: ' + s + 'px !important;',
+        '}'
+    ].join('\n');
 }

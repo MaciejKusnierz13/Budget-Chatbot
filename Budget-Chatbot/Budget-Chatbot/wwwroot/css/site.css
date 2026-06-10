@@ -215,18 +215,18 @@ body {
 }
 
 .topbar {
-    height: 50px;
+    height: 64px;
     background: #1a1a1a;
     border-bottom: 1px solid #2a2a2a;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
+    padding: 0 24px;
     flex-shrink: 0;
 }
 
 .topbar-title {
-    font-size: 13px;
+    font-size: 16px;
     font-weight: 600;
     color: #e0e0e0;
 }
@@ -234,18 +234,18 @@ body {
 .topbar-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
 }
 
 .style-switcher {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .style-dot {
-    width: 11px;
-    height: 11px;
+    width: 15px;
+    height: 15px;
     border-radius: 50%;
     cursor: pointer;
     border: 2px solid transparent;
@@ -820,10 +820,10 @@ body {
     }
 
 .help-popup {
-    position: absolute;
+    position: fixed;
     bottom: 80px;
-    left: 240px;
-    width: 280px;
+    left: 60px;
+    width: 400px;
     background: #1e1e1e;
     border: 1px solid #2a2a2a;
     border-radius: 8px;
@@ -1288,12 +1288,12 @@ body[data-style="neon"] {
 }
 
 .topbar-user-avatar {
-    width: 26px;
-    height: 26px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     background: #2a2a2a;
     color: #e0e0e0;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -1302,7 +1302,7 @@ body[data-style="neon"] {
 }
 
 .topbar-user-name {
-    font-size: 12px;
+    font-size: 14px;
     color: #777;
 }
 
@@ -1313,19 +1313,19 @@ body[data-style="neon"] {
 }
 
 .font-size-label {
-    font-size: 10px;
-    color: #555;
+    font-size: 12px;
+    color: #666;
     white-space: nowrap;
 }
 
 .font-size-input {
-    width: 52px;
-    padding: 3px 6px;
+    width: 60px;
+    padding: 5px 8px;
     background: #1a1a1a;
     border: 1px solid #2a2a2a;
     border-radius: 5px;
     color: #e0e0e0;
-    font-size: 12px;
+    font-size: 14px;
     outline: none;
     text-align: center;
 }
