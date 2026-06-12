@@ -89,7 +89,6 @@ Odpowiedz TYLKO i WYŁĄCZNIE wygenerowanym obiektem JSON dla najnowszej wiadomo
                 }
             }
 
-            // 5. Deserializacja właściwego JSON-a do naszego czystego kontraktu DTO
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             var parsedDto = JsonSerializer.Deserialize<ParsedTransactionDto>(llmResponse, options);
 
