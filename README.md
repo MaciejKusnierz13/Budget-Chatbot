@@ -66,18 +66,26 @@ W systemie zostało przygotowane jedno, bezpieczne konto główne, na które mus
 
 Po uruchomieniu strony kliknij odnośnik Login / Zaloguj w menu górnym.
 
+<img width="1763" height="955" alt="Zrzut ekranu_12-6-2026_211221_localhost" src="https://github.com/user-attachments/assets/7ace950f-f720-413a-afdb-f5250da23c07" />
+
 W formularzu, który pojawi się na ekranie, wpisz następujące dane:
 
 Nazwa użytkownika: admin
 
 Hasło: admin123
 
+<img width="1763" height="955" alt="Zrzut ekranu_12-6-2026_211429_localhost" src="https://github.com/user-attachments/assets/7af8168a-01db-4783-97a8-faad83f56034" />
+
 Kliknij niebieski przycisk Zaloguj się.
 
 Poniżej widok poprawnego formularza logowania:
 
+<img width="1763" height="955" alt="image" src="https://github.com/user-attachments/assets/2906355a-4b6b-494c-bce8-0d0ae396b96f" />
+
 Krok 2: Korzystanie z inteligentnego Chatbota
 Główny ekran systemu to Twój osobisty asystent finansowy.
+
+<img width="1763" height="955" alt="image" src="https://github.com/user-attachments/assets/2d844072-03fa-47b8-a736-e12209df3f27" />
 
 W dolnej części ekranu znajdziesz pole tekstowe z napisem "Napisz wiadomość...".
 
