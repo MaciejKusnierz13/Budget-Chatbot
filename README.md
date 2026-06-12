@@ -118,8 +118,6 @@ Wykres sumaryczny (Bilans): Prezentuje ogólne zestawienie Twoich zarobków (kol
 
 Wykres liniowy trendu: Pokazuje, w jakie dni miesiąca Twój portfel chudł najszybciej.
 
-Poniżej przykładowe zestawienie wygenerowanych wykresów analitycznych:
-
 Krok 4: Customizacja (Dostosowanie) treści
 Kolorystyka: Wykresy posiadają wbudowaną, automatyczną logikę kolorów. Wszystkie przychody zawsze generują się w odcieniach zieleni, a wydatki w odcieniach czerwieni/pomarańczu, ułatwiając szybką ocenę sytuacji.
 
