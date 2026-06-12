@@ -70,7 +70,7 @@ W formularzu, który pojawi się na ekranie, wpisz następujące dane:
 
 Nazwa użytkownika: admin
 
-Hasło: Admin123!
+Hasło: admin123
 
 Kliknij niebieski przycisk Zaloguj się.
 
