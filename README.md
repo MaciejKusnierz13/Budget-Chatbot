@@ -1,4 +1,4 @@
-# 💰 Budget Chatbot – System Zarządzania Budżetem
+# Budget Chatbot – System Zarządzania Budżetem
 
 Inteligentna aplikacja webowa służąca do kontroli finansów osobistych za pomocą interaktywnego czatu oraz zaawansowanych paneli analitycznych.
 
