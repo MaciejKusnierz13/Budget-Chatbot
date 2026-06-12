@@ -89,18 +89,24 @@ Główny ekran systemu to Twój osobisty asystent finansowy.
 
 W dolnej części ekranu znajdziesz pole tekstowe z napisem "Napisz wiadomość...".
 
-Wpisz tam naturalne zdanie, np.: Dodałem dzisiaj wydatek 45 zł na Zakupy Spożywcze.
+Wpisz tam naturalne zdanie, np.: Dzisiaj wydatek 45 zł na kawę.
 
 Kliknij ikonę wysyłania lub naciśnij Enter. Chatbot automatycznie rozpozna kwotę oraz kategorię, dopisze ją do Twojego konta i odpowie potwierdzeniem w oknie rozmowy.
 
 Poniżej wygląd okna rozmowy z asystentem:
 
+<img width="1763" height="955" alt="image" src="https://github.com/user-attachments/assets/ad1f99da-54d4-4827-b982-fe63499d169a" />
+
 Krok 3: Przeglądanie wykresów i filtrowanie dat
 Wszystkie dane, które wpisujesz na czacie, system natychmiast zamienia w kolorowe analizy graficzne.
 
-W menu górnym kliknij w zakładkę Zaawansowane Raporty (lub wejdź pod adres /Home/Charts).
+W menu górnym kliknij w zakładkę Wykesy (lub wejdź pod adres /Home/Charts).
+
+<img width="1763" height="955" alt="image" src="https://github.com/user-attachments/assets/9a90243e-d7a4-4a96-8939-7e41e9b9dd82" />
 
 Nad wykresami znajdziesz dwa pola kalendarza: Od (From) oraz Do (To). Kliknij w nie i wybierz zakres dni, który chcesz przeanalizować (np. obecny miesiąc).
+
+<img width="1763" height="1070" alt="image" src="https://github.com/user-attachments/assets/9dbe285c-54f9-4215-90ea-aee9b8f7d36e" />
 
 Kliknij niebieski przycisk Generuj Wszystkie Wykresy.
 
