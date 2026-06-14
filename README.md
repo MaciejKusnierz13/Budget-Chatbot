@@ -7,19 +7,47 @@ Inteligentna aplikacja webowa służąca do kontroli finansów osobistych, któr
 ## 1. Instrukcja Uruchomienia Lokalnego (Dla Programisty)
 
 ### Wymagania wstępne:
-* Środowisko **Visual Studio 2022** z zainstalowanym pakietem `.NET Web Development`.
-* Zainstalowane środowisko **.NET 8 SDK** (lub nowsze).
-* Lokalna instancja serwera bazodanowego **SQL Server (LocalDB)**.
+
+Środowisko Visual Studio 2022 z zainstalowanym pakietem .NET Web Development.
+
+Zainstalowane środowisko .NET 8 SDK (lub nowsze).
+
+Lokalna instancja serwera bazodanowego SQL Server (LocalDB).
+
+Zainstalowana aplikacja LM Studio (do obsługi lokalnego modelu językowego).
 
 ### Krok po kroku:
-1. **Pobranie kodu:** Sklonuj to repozytorium na swój dysk lokalny lub pobierz paczkę ZIP.
-2. **Otwarcie projektu:** Uruchom plik rozwiązania `Budget-Chatbot.sln` w programie Visual Studio.
-3. **Konfiguracja Bazy Danych:** Otwórz konsolę menedżera pakietów (*Tools* -> *NuGet Package Manager* -> *Package Manager Console*) i wykonaj poniższą komendę, aby automatycznie zbudować tabele i dodać konto administratora:
+
+Pobranie kodu: Sklonuj to repozytorium na swój dysk lokalny lub pobierz paczkę ZIP.
+
+Otwarcie projektu: Uruchom plik rozwiązania Budget-Chatbot.sln w programie Visual Studio.
+
+### Konfiguracja modelu AI (Bielik w LM Studio):
+
+Uruchom program LM Studio.
+
+W pasku wyszukiwania (lupka) wpisz bielik-1.5b-v3.0-instruct i pobierz model w formacie GGUF (ze względu na optymalizację sprzętową, zalecany jest plik o mniejszej kwantyzacji dla słabszych maszyn).
+
+Przejdź do zakładki Local Server (ikona serwera po lewej stronie).
+
+Z górnej listy wybierz pobrany model Bielik.
+
+Upewnij się, że port serwera jest ustawiony na 1234 (standard dla naszego API).
+
+Kliknij Start Server. Zostaw program działający w tle.
+
+### Konfiguracja Bazy Danych
+
+Otwórz konsolę menedżera pakietów w Visual Studio (Tools -> NuGet Package Manager -> Package Manager Console). Upewnij się, że domyślnym projektem jest BudgetChatbot.Infrastructure i wykonaj poniższą komendę, aby automatycznie zbudować tabele i załadować dane startowe (w tym kategorie bazowe):
+
    ```shell
    Update-Database
-Uruchomienie: Naciśnij klawisz F5 lub kliknij przycisk Uruchom na górnym pasku Visual Studio. Aplikacja otworzy się automatycznie w przeglądarce pod adresem http://localhost:5000 (lub pokrewnym portem lokalnym).
+   ```
+### Uruchomienie
 
-2. Wykaz Użytych Technologii
+Naciśnij klawisz F5 lub kliknij przycisk Uruchom na górnym pasku Visual Studio. Aplikacja skompiluje się i otworzy automatycznie w przeglądarce (interfejs Swagger) pod adresem http://localhost:5000 (lub pokrewnym portem wygenerowanym przez środowisko).
+
+## 2. Wykaz Użytych Technologii
 Backend (Logika systemu): .NET 8 / C# (ASP.NET Core MVC)
 
 Baza danych i ORM: Entity Framework Core (SQL Server / LocalDB)
@@ -30,7 +58,8 @@ Frontend (Interfejs): Razor Views, HTML5, CSS3, Bootstrap 5, JavaScript (Fetch A
 
 Wizualizacja danych: Chart.js (Wykresy dynamiczne)
 
-3. Pełna Dokumentacja Techniczna
+## 3. Pełna Dokumentacja Techniczna
+
 Architektura Rozwiązania
 Aplikacja została zaprojektowana zgodnie z zasadami architektury wielowarstwowej (Layered Architecture), co zapewnia wyraźne odseparowanie logiki od wyglądu strony:
 
@@ -58,8 +87,7 @@ Relacja Jeden-do-wielu między tabelą Users a Transactions (jeden użytkownik p
 
 Relacja Jeden-do-wielu między tabelą Categories a Transactions. Zastosowano regułę DeleteBehavior.Restrict – usunięcie kategorii z systemu jest blokowane, jeśli są do niej przypisane jakiekolwiek historyczne transakcje (ochrona przed uszkodzeniem spójności danych).
 
-4. Instrukcja Obsługi (User Manual dla Amatora)
-Witaj w prostym przewodniku po systemie Budget Chatbot! Ta instrukcja wyjaśni Ci, jak w kilku prostych krokach zarządzać swoimi pieniędzmi.
+## 4. Instrukcja Obsługi
 
 Krok 1: Logowanie do Panelu Administratora
 W systemie zostało przygotowane jedno, bezpieczne konto główne, na które musisz się zalogować, aby aplikacja mogła poprawnie zapisywać Twoje wydatki.
